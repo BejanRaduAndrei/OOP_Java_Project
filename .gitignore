@@ -1,0 +1,13 @@
+# Java
+*.class
+*.jar
+*.war
+*.ear
+target/
+bin/
+out/
+build/
+.vscode/
+.idea/
+*.log
+.DS_Store
