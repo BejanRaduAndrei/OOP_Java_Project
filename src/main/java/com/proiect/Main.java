@@ -18,7 +18,6 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws Exception {
         System.out.println("=== INIȚIALIZARE BAZĂ DE DATE ===");
         // 1. Mai întâi verificăm/creăm tabelele în PostgreSQL
-        createPgAdminTables();
         printPgAdminTables();
 
         System.out.println("\n=== PORNIRE INTERFAȚĂ GRAFICĂ ===");
