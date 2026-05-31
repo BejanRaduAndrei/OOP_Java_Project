@@ -70,47 +70,10 @@ Acest proiect este o aplicație didactică pentru gestionarea unei flote de vehi
   - `DataSavingService.MotorcycleService` — create pentru `vehicule` (motociclete)
   - `DataSavingService.BookingServiceRepository` — create pentru `rezervari`
 
-- ERD (Entity Relationship Diagram) — mermaid
+- ERD (Entity Relationship Diagram) 
 
-```mermaid
-erDiagram
-    CLIENTI {
-      VARCHAR cnp PK
-      VARCHAR nume
-      VARCHAR email
-      VARCHAR telefon
-    }
-    VEHICULE {
-      SERIAL id PK
-      VARCHAR make
-      VARCHAR model
-      INT year
-      NUMERIC daily_rate
-      BOOLEAN available
-      VARCHAR tip_vehicul
-    }
-    REZERVARI {
-      VARCHAR booking_id PK
-      VARCHAR client_cnp FK
-      DATE data_inceput
-      DATE data_sfarsit
-      NUMERIC cost_total
-    }
-    BRANCH {
-      SERIAL id PK
-      VARCHAR name
-      VARCHAR address
-    }
-    STAFF {
-      SERIAL id PK
-      VARCHAR name
-      VARCHAR role
-    }
+<img width="1222" height="587" alt="Screenshot 2026-05-31 224130" src="https://github.com/user-attachments/assets/dde3d8bc-7177-41b2-8df5-125a35bb72af" />
 
-    CLIENTI ||--o{ REZERVARI : has
-    VEHICULE ||--o{ REZERVARI : reserved_in
-    BRANCH ||--o{ STAFF : employs
-```
 
 4) Rulare / notițe practice
 
