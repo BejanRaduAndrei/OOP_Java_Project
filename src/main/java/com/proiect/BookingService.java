@@ -25,6 +25,7 @@ public class BookingService {
         Booking booking = new Booking(bookingId, client, vehicle, startDate, endDate);
         bookings.add(booking);
         vehicleService.markAsUnavailable(vehicle);
+        AuditService.getInstance().logAction("create_booking");
         return booking;
     }
 

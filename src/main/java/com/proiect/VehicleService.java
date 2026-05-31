@@ -8,35 +8,41 @@ public class VehicleService {
 
     public void addVehicle(Vehicle vehicle) {
         vehicles.add(vehicle);
+        AuditService.getInstance().logAction("add_vehicle");
     }
 
     public Vehicle createVehicle(String make, String model, int year, double dailyRate) {
         Vehicle vehicle = new Vehicle(make, model, year, dailyRate, true);
         vehicles.add(vehicle);
+        AuditService.getInstance().logAction("create_vehicle");
         return vehicle;
     }
 
     public Car createCar(String make, String model, int year, double dailyRate, int engineCapacityCc, String licensePlate, String fuelType, int mileageKm) {
         Car car = new Car(make, model, year, dailyRate, true, engineCapacityCc, licensePlate, fuelType, mileageKm);
         vehicles.add(car);
+        AuditService.getInstance().logAction("create_car");
         return car;
     }
 
     public Car createCar(String make, String model, int year, double dailyRate) {
         Car car = new Car(make, model, year, dailyRate, true, 1400, "NEINREGISTRATA", "benzina", 0);
         vehicles.add(car);
+        AuditService.getInstance().logAction("create_car");
         return car;
     }
 
     public Motorcycle createMotorcycle(String make, String model, int year, double dailyRate, int engineCapacityCc, boolean hasTopCase) {
         Motorcycle motorcycle = new Motorcycle(make, model, year, dailyRate, true, engineCapacityCc, hasTopCase);
         vehicles.add(motorcycle);
+        AuditService.getInstance().logAction("create_motorcycle");
         return motorcycle;
     }
 
     public Bicycle createBicycle(String make, String model, int year, double dailyRate, String bicycleType, BicycleEquipment equipment) {
         Bicycle bicycle = new Bicycle(make, model, year, dailyRate, true, bicycleType, equipment);
         vehicles.add(bicycle);
+        AuditService.getInstance().logAction("create_bicycle");
         return bicycle;
     }
 
@@ -91,12 +97,14 @@ public class VehicleService {
     public void markAsUnavailable(Vehicle vehicle) {
         if (vehicle != null) {
             vehicle.setAvailable(false);
+            AuditService.getInstance().logAction("mark_vehicle_unavailable");
         }
     }
 
     public void markAsAvailable(Vehicle vehicle) {
         if (vehicle != null) {
             vehicle.setAvailable(true);
+            AuditService.getInstance().logAction("mark_vehicle_available");
         }
     }
 }
