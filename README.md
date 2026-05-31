@@ -45,21 +45,9 @@ Alte clase de model / utilitare:
 **Acțiuni importante implementate**
 - Creare / înregistrare clienți (`ClientService.createClient`).
 - Adăugare vehicule și interogare pe tipuri (`VehicleService.createCar` / `getAllCars` etc.).
-- Creare rezervare (`BookingService.createBooking`) — verifică disponibilitatea și blochează vehiculul.
+- Creare rezervare (`BookingService.createBooking`)  verifică disponibilitatea și blochează vehiculul.
 - Calcul preț închiriere (`PricingService.calculateRentalPrice` și `calculateRentalPriceWithDiscount`).
-- Salvare date în fișiere (`DataSavingService.saveAllData` etc.).
+- Salvare date în fișiere (`DataSavingService.saveAllData` [in lucru]).
 - Validare telefon românesc în `Client` (aruncare `InvalidRomanianPhoneNumberException`).
 
-**Flux demo din `Main`**
-- Se creează instanțe de servicii: `ClientService`, `VehicleService`, `BookingService`, `PricingService`.
-- Se înregistrează un client valid și se încearcă un client invalid pentru a demonstra excepția.
-- Se creează exemple de `Car`, `Motorcycle`, `Bicycle` și se afișează colecția polimorfică.
-- Se face o rezervare, se calculează costul și se afișează rezultatele.
 
-**Observații & posibile îmbunătățiri**
-- Persistență: în loc de fișiere text, se poate folosi o bază de date (JDBC / ORM).
-- Validări mai robuste (formate de date, intervale, existența vehiculului în serviciu înainte de rezervare).
-- Tranzacții: operațiile care schimbă starea (ex: rezervare + marcarea vehiculului) ar putea fi atomice.
-- Testare: adăugarea unui set de teste unitare pentru servicii.
-
-Dacă vrei, pot adăuga exemple de utilizare (snippet-uri de cod) în README sau pot genera un fișier `CONTRIBUTING.md` cu pași pentru rulare și testare.
