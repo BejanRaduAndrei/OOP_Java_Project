@@ -65,3 +65,29 @@ Sistemul utilizează un vendor de baze de date SQL (PostgreSQL) accesat nativ pr
 
 ### Diagrama Entity Relationship Diagram
 <img width="1222" height="587" alt="Screenshot 2026-05-31 224130" src="https://github.com/user-attachments/assets/dde3d8bc-7177-41b2-8df5-125a35bb72af" />
+
+## 5. Design Patterns și Coding Best Practices
+
+Proiectul implementează șabloane de proiectare (Design Patterns) recunoscute în industria software pentru a asigura decuplarea componentelor, extinderea facilă a codului și mentenanța pe termen lung.
+
+### Design Patterns Implementate
+
+#### Singleton Pattern
+* **Scop:** Garantarea existenței unei singure instanțe la nivel global pentru gestionarea eficientă a resurselor partajate.
+* **Implementare în cod:** Clasa `AuditService` și clasa `DataSavingService` folosesc o metodă publică statică `getInstance()`.
+* **Justificare:** Previne apariția conflictelor de concurență (race conditions) la deschiderea și scrierea simultană în fișierul `audit.csv` sau la gestionarea pool-ului de conexiuni JDBC.
+
+#### Builder Pattern
+* **Scop:** Construirea fluentă și pas cu pas a obiectelor complexe, eliminând constructorii supraîncărcați (telescoping constructors).
+* **Implementare în cod:** Clasa `ClientBuilder` permite instanțierea entității `Client` prin apeluri înlănțuite de tipul `withName()`, `withEmail()`.
+* **Justificare:** Centralizează validările de integritate structurală în metoda `.build()` înainte ca obiectul să devină activ în memorie, crescând lizibilitatea codului.
+
+#### Factory Method Pattern
+* **Scop:** Centralizarea și încapsularea logicii de instanțiere a obiectelor din cadrul aceleiași ierarhii, ascunzând detaliile concrete față de client.
+* **Implementare în cod:** Metodele dedicate din `VehicleService` (`createCar`, `createMotorcycle`, `createBicycle`).
+* **Justificare:** Controllerul sau clasele externe pot solicita crearea unui nou vehicul fără a fi dependente structural de constructorii specifici ai claselor derivate sau de parametrii impliciți ai acestora.
+
+#### Observer Pattern (UI Data Binding)
+* **Scop:** Notificarea și actualizarea automată a componentelor de vizualizare (View) în momentul în care starea modelului de date se modifică.
+* **Implementare în cod:** Legarea reactivă dintre colecțiile de tip `ObservableList` gestionate în `MainController` și componentele grafice `ListView` definite în FXML.
+* **Justificare:** Asigură respectarea arhitecturii MVC; adăugarea sau ștergerea unui element din colecție se reflectă instantaneu pe ecran fără a fi necesară reîncărcarea manuală a întregii interfețe.
