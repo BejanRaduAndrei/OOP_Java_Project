@@ -1,105 +1,198 @@
-
 **Proiect: Sistem simplu de închiriere vehicule**
 
-Acest proiect este o aplicație didactică pentru gestionarea unei flote de vehicule (mașini, motociclete, biciclete), clienți, rezervări și istoricul clienților. Aplicația conține modele (entități), servicii de business, persistență JDBC (PostgreSQL folosit implicit) și utilitare.
+Acest proiect este un demo minimal pentru gestionarea unei flote de vehicule (mașini, motociclete, biciclete), clienți și rezervări. Codul conține modele (entități), servicii care efectuează acțiuni și câteva utilitare pentru prețuri și salvare date.
 
-1) Definirea sistemului
+**Structură generală & roluri**
+- **Modele / Entități**: clase simple care rețin date despre obiecte (ex: `Vehicle`, `Client`, `Booking`).
+- **Servicii**: clase care implementează logica de business și acțiuni (ex: `VehicleService`, `BookingService`, `ClientService`, `PricingService`, `DataSavingService`).
+- **Utilitare / domain objects**: `Invoice`, `RentalAgreement`, `Maintenance`, `VehicleStatus`, `ClientHistory`.
+- **`Main`**: demo care construiește obiecte, crează rezervări și arată funcționalități.
 
-- Obiecte (cel puțin 10):
-  - `Client`, `Vehicle`, `AutoVehicle`, `Car`, `Motorcycle`, `Bicycle`, `BicycleEquipment`, `Booking`, `ClientHistoryRecord`, `Invoice`, `Branch`, `Staff`.
+**Clase principale și moștenire (scurt)**
+- `Rentable` (interfață)
+  - Metode: `getDailyRate()`, `isAvailable()`, `setAvailable(boolean)`
+  - Default: `estimatePrice(int days)` — oferă calcul estimat pe zile.
 
-- Acțiuni (cel puțin 15 posibile în sistem):
-  - Înregistrare client
-  - Ștergere client
-  - Actualizare client
-  - Adăugare vehicul
-  - Ștergere vehicul
-  - Marcarea vehiculului ca disponibil/indisponibil
-  - Listare vehicule după tip
-  - Creare rezervare
-  - Anulare rezervare
-  - Calcul cost închiriere
-  - Generare factură (`Invoice`)
-  - Salvare istoric client (`ClientHistory`)
-  - Programare mentenanță (`Maintenance`)
-  - Atribuire staff la sucursală (`Branch` / `Staff`)
-  - Export / import date (persistență JDBC/fișiere)
+- `Vehicle` implements `Rentable`
+  - Atribute: `make`, `model`, `year`, `dailyRate`, `available`.
+  - Reprezintă tipul comun pentru toate vehiculele.
 
-2) Implementare (ce este în cod)
+- `AutoVehicle` extends `Vehicle`
+  - Atribut: `engineCapacityCc`.
+  - Bază pentru vehicule cu motor.
 
-- Clase simple și încapsulare: toate entitățile au atribute private și accesori (`get`/`set`).
-- Moștenire:
-  - `Vehicle` -> `AutoVehicle` -> (`Car`, `Motorcycle`)
-  - `Vehicle` -> `Bicycle`
-- Interfețe:
-  - `Rentable` este implementată de `Vehicle` (metode: `getDailyRate()`, `isAvailable()`, `setAvailable(boolean)`).
-- Excepții:
-  - `InvalidRomanianPhoneNumberException` folosită în `Client` pentru validarea telefonului.
-- Colecții folosite (cel puțin 3 tipuri; una sortată):
-  - `List` (ex: stocare listă vehicule, rezervări) — `ArrayList`
-  - `Set` / `HashSet` (ex: index unic `cnp` în `ClientService` în variantele existente)
-  - `Map` / `HashMap` (ex: index `byCnp` în `ClientService` pentru căutări O(1))
-  - `TreeSet` (colecție sortată) folosit în `ClientHistory` pentru a păstra `ClientHistoryRecord` sortate după dată.
+- `Car` extends `AutoVehicle`
+  - Atribute specifice: `licensePlate`, `fuelType`, `mileageKm`.
 
-- Servicii principale:
-  - `ClientService` — operații sistem (create, remove, find) și integrare cu persistence layer.
-  - `VehicleService` — gestionare vehicule și filtre.
-  - `BookingService` — crea rezervări, verifică disponibilitate.
-  - `PricingService` — calcul prețuri și discount-uri.
-  - `DataSavingService` — singleton care oferă implementări `GenericRepository<T,ID>` pentru mai multe tipuri (vezi mai jos).
+- `Motorcycle` extends `AutoVehicle`
+  - Atribut specific: `hasTopCase`.
 
-- Singleton & persistență generică:
-  - `DataSavingService` este un singleton; conține clase repository (static inner classes) care implementează `GenericRepository` pentru:
-    - `ClientService` (CRUD pentru tabela `clienti`)
-    - `BranchService`
-    - `StaffService`
-    - `CarService`
-    - `MotorcycleService`
-    - `BookingServiceRepository`
-  - Aceste repo-uri folosesc JDBC (clasa `Database.connect()` din `Database.java`) pentru conectare la PostgreSQL (URL, user, password configurate în `Database.java`).
+- `Bicycle` extends `Vehicle`
+  - Atribute: `bicycleType`, `BicycleEquipment equipment`.
+- `BicycleEquipment` — wrapper pentru dotări (casca, lanț/încuietoare, lumini, coș).
 
-3) Persistență și model de date (JDBC)
+Alte clase de model / utilitare:
+- `Client` — date client, include validare număr de telefon (aruncă `InvalidRomanianPhoneNumberException` dacă e invalid).
+- `Booking` — rezervare între un `Client` și un `Vehicle` (date de început/sfârșit).
+- `BookingService` — creează rezervări, verifică disponibilitate prin `VehicleService` și marchează vehiculul ca indisponibil.
+- `VehicleService` — gestionează lista de vehicule, factory-uri helpers (`createCar`, `createMotorcycle`, `createBicycle`), filtre (toate, disponibile, pe tipuri) și marcaje de disponibilitate.
+- `ClientService` — înregistrare și căutare clienți (index pe `cnp` pentru unicitate).
+- `PricingService` — calculează prețul total între două date și aplică eventuale discount-uri.
+- `DataSavingService` — salvează colecții de date în fișiere text (clienți, vehicule, rezervări etc.).
+- `ClientHistory` — păstrează acțiunile istorice ale clienților; conține și clasa `ClientHistoryRecord`.
+- `Maintenance`, `VehicleStatus`, `Invoice`, `RentalAgreement`, `Staff`, `Branch` — obiecte suport pentru funcționalități operaționale și raportare.
 
-- Baza de date: proiectul folosește PostgreSQL în configurația implicită din `Database.java`. Se pot modifica `URL`, `USER`, `PASSWORD` în acea clasă.
+**Acțiuni importante implementate**
+- Creare / înregistrare clienți (`ClientService.createClient`).
+- Adăugare vehicule și interogare pe tipuri (`VehicleService.createCar` / `getAllCars` etc.).
+- Creare rezervare (`BookingService.createBooking`)  verifică disponibilitatea și blochează vehiculul.
+- Calcul preț închiriere (`PricingService.calculateRentalPrice` și `calculateRentalPriceWithDiscount`).
+- Salvare date în fișiere (`DataSavingService.saveAllData` [in lucru]).
+- Validare telefon românesc în `Client` (aruncare `InvalidRomanianPhoneNumberException`).
 
-- Servicii CRUD implementate (cel puțin 6):
-  - `DataSavingService.ClientService` — CRUD `clienti` (tabel `clienti`)
-  - `DataSavingService.BranchService` — create/read pentru `branch`
-  - `DataSavingService.StaffService` — create pentru `staff`
-  - `DataSavingService.CarService` — create/read pentru `vehicule` (mașini)
-  - `DataSavingService.MotorcycleService` — create pentru `vehicule` (motociclete)
-  - `DataSavingService.BookingServiceRepository` — create pentru `rezervari`
+**README actualizat — cerințe și mapare**
 
-- ERD (Entity Relationship Diagram) 
+**1) Listă de acțiuni (exemple, >=15)**
+- Creare client
+- Citire client
+- Actualizare client
+- Ștergere client
+- Adăugare vehicul
+- Listare vehicule (toate)
+- Filtrare vehicule disponibile
+- Creare mașină/motocicletă/bicicletă (factory methods)
+- Creare rezervare
+- Listare rezervări active/viitoare
+- Marcarea vehiculului ca indisponibil/disponibil
+- Generare factură (class `Invoice`)
+- Păstrare istoric client (`ClientHistory`)
+- Persistare entități în baza de date (CRUD parțial)
+- Scriere audit (fisier CSV) la fiecare acțiune
 
-<img width="1222" height="587" alt="Screenshot 2026-05-31 224130" src="https://github.com/user-attachments/assets/dde3d8bc-7177-41b2-8df5-125a35bb72af" />
+Această listă este acoperită în cod prin clasele de servicii și repository-uri din proiect.
 
+**2) Tipuri de obiecte (exemple, >=10)**n+- Client
+- Vehicle
+- Car
+- Motorcycle
+- Bicycle
+- Booking
+- Invoice
+- Branch
+- Staff
+- ClientHistory / ClientHistoryRecord
+- BicycleEquipment
 
-4) Rulare / notițe practice
+Toate aceste clase se regăsesc sub `src/main/java/com/proiect` (de ex. [src/main/java/com/proiect/Client.java](src/main/java/com/proiect/Client.java)).
 
-- Crearea tabelelor: `Main.createPgAdminTables()` conține SQL pentru crearea tabelelor folosite în demo; rulează `Main` pentru a crea sau verifica tabelele existente.
-- Configurare DB: modificați conexiunea în `Database.java` (URL, USER, PASSWORD) pentru mediul vostru PostgreSQL.
+**3) Cum sunt îndeplinite cerințele de implementare**
+- Clase simple și encapsulare: toate modelele au atribute private și getter/setter (ex.: [src/main/java/com/proiect/Vehicle.java](src/main/java/com/proiect/Vehicle.java)).
+- Colecții: `List` (ArrayList) în `VehicleService`, `Set` (HashSet) în `ClientService`, `TreeSet` (sortată) în `ClientHistory` — exemple: [src/main/java/com/proiect/VehicleService.java](src/main/java/com/proiect/VehicleService.java), [src/main/java/com/proiect/ClientService.java](src/main/java/com/proiect/ClientService.java), [src/main/java/com/proiect/ClientHistory.java](src/main/java/com/proiect/ClientHistory.java).
+- Moștenire: `Vehicle` → `AutoVehicle` → `Car`/`Motorcycle`; `Bicycle` extinde `Vehicle` (vezi [src/main/java/com/proiect/AutoVehicle.java](src/main/java/com/proiect/AutoVehicle.java)).
+- Interfețe: `Rentable` și `GenericRepository<T,ID]` (vezi [src/main/java/com/proiect/Rentable.java](src/main/java/com/proiect/Rentable.java) și [src/main/java/com/proiect/GenericRepository.java](src/main/java/com/proiect/GenericRepository.java)).
+- Excepții: `InvalidRomanianPhoneNumberException` definită și folosită în `Client` pentru validarea numărului de telefon ([src/main/java/com/proiect/InvalidRomanianPhoneNumberException.java](src/main/java/com/proiect/InvalidRomanianPhoneNumberException.java)).
+- Servicii: `VehicleService`, `ClientService`, `BookingService`, `PricingService`, `DataSavingService` — expun operațiile sistemului (ex.: [src/main/java/com/proiect/BookingService.java](src/main/java/com/proiect/BookingService.java)).
+- Clasa `Main`: pornește GUI și inițializează tabele DB (vezi [src/main/java/com/proiect/Main.java](src/main/java/com/proiect/Main.java)).
 
-Exemple rapide de comenzi Maven (în terminal):
+**4) Persistență JDBC și CRUD**
+- Conexiune JDBC: [src/main/java/com/proiect/Database.java](src/main/java/com/proiect/Database.java) (configurare URL/USER/PASSWORD în cod — modifică după nevoie).
+- Creare tabele: `Main.createPgAdminTables()` definește tabele inițiale (`branch`, `staff`, `vehicule`/`masini`/`motociclete`/`biciclete`, `clienti`, `rezervari`, `client_history`).
+- CRUD: `DataSavingService` conține implementări `GenericRepository` pentru cel puțin 6 entități (ex.: `ClientService`, `BranchService`, `StaffService`, `CarService`, `MotorcycleService`, `BookingServiceRepository`) — vezi [src/main/java/com/proiect/DataSavingService.java](src/main/java/com/proiect/DataSavingService.java).
+- Servicii singleton: `DataSavingService.getInstance()` și `AuditService.getInstance()` (ex.: [src/main/java/com/proiect/AuditService.java](src/main/java/com/proiect/AuditService.java)).
 
-```powershell
-mvn compile
-mvn exec:java -Dexec.mainClass="com.proiect.Main"
+**5) Serviciu audit**
+- `AuditService` scrie în `audit.csv` pentru fiecare acțiune apelată (format: `nume_actiune,timestamp`). Utilizat în `VehicleService`, `BookingService`, `DataSavingService` etc. (vezi [src/main/java/com/proiect/AuditService.java](src/main/java/com/proiect/AuditService.java)).
+
+**6) Design patterns demonstrate (>=3)**
+- Singleton: `AuditService`, `DataSavingService` (`getInstance()` methods).
+- Builder: `ClientBuilder` adăugat pentru construire fluentă a obiectelor `Client` ([src/main/java/com/proiect/ClientBuilder.java](src/main/java/com/proiect/ClientBuilder.java)).
+- Factory (Factory Method): `VehicleService.createCar/createMotorcycle/createBicycle` (metode care creează instanțe concrete).
+- Observer: UI binding JavaFX (`ObservableList` → `ListView`) în [src/main/java/com/proiect/MainController.java](src/main/java/com/proiect/MainController.java).
+
+**7) Interfață grafică (JavaFX)**
+- FXML: [src/main/resources/view/interface.fxml](src/main/resources/view/interface.fxml) — conține meniuri, liste și formulare.
+- Controller: [src/main/java/com/proiect/MainController.java](src/main/java/com/proiect/MainController.java) — logica UI, legarea la `ClientService` și `VehicleService` și persistare prin `DataSavingService`.
+
+**8) Diagrama ERD**
+Mermaid ERD (actualizat) este inclus în repository README pentru referință:
+
+```mermaid
+erDiagram
+  BRANCH {
+    INT id PK
+    VARCHAR name
+    VARCHAR address
+    VARCHAR phone_number
+  }
+  STAFF {
+    INT id PK
+    VARCHAR name
+    VARCHAR role
+    INT branch_id FK
+    VARCHAR email
+  }
+  VEHICLE {
+    INT id PK
+    VARCHAR make
+    VARCHAR model
+    INT year
+    NUMERIC daily_rate
+    BOOLEAN available
+    VARCHAR type
+  }
+  CLIENT {
+    VARCHAR cnp PK
+    VARCHAR name
+    VARCHAR email
+    VARCHAR phone
+  }
+  BOOKING {
+    VARCHAR booking_id PK
+    VARCHAR client_cnp FK
+    INT vehicle_id FK
+    DATE start_date
+    DATE end_date
+    NUMERIC total_cost
+    VARCHAR status
+    TIMESTAMP created_at
+  }
+  CLIENT_HISTORY {
+    INT id PK
+    VARCHAR history_id
+    VARCHAR client_cnp FK
+    VARCHAR booking_id FK
+    TIMESTAMP action_date
+    VARCHAR action
+  }
+
+  BRANCH ||--o{ STAFF : employs
+  CLIENT ||--o{ BOOKING : makes
+  VEHICLE ||--o{ BOOKING : is_reserved
+  CLIENT ||--o{ CLIENT_HISTORY : has_history
+  BOOKING ||--o{ CLIENT_HISTORY : related_history
 ```
 
-5) Ce am extins recent
+**9) Cum rulezi proiectul**
+- Java 17+ recomandat.
+- Configurează conexiunea DB în [src/main/java/com/proiect/Database.java](src/main/java/com/proiect/Database.java) (URL/USER/PASSWORD).
+- Rulează aplicația (Maven):
 
-- `ClientService`: am îmbunătățit siguranța (indexare `byCnp`, injecție repo, sincronizare) — (dacă nu vedeți acest fișier în workspace, aplicația păstrează o versiune alternativă).
-- `DataSavingService` oferă implementări JDBC pentru mai multe tipuri (repo-uri generice).
-- `ClientHistory` folosește `TreeSet` pentru istoricul sortat.
+```bash
+mvn clean javafx:run
+```
 
-6) Pași următori sugerați
+După pornire, interfața grafică permite adăugarea de clienți și vehicule. Operațiile de persistare folosesc PostgreSQL conform setării din `Database.java` (schimbă dacă folosești alt vendor).
 
-- Adăugați validări suplimentare pentru `email` și folosirea `InvalidRomanianPhoneNumberException` acolo unde este cazul (dacă nu e deja activ).
-- Înlocuiți `System.out.println` cu `java.util.logging` sau `SLF4J` + `Logback` pentru logging mai bun.
-- Adăugați teste unitare pentru `ClientService`, `BookingService` și repo-urile JDBC.
+**10) Ce poți extinde / recomandări**
+- Adaugă FK explicite în `Main.createPgAdminTables()` pentru `client_history` și `rezervari`.
+- Convertește tabelul vehicule într-o singură tabelă `vehicle` cu coloană `type` (simplifică CRUD). 
+- Extinde CRUD complet pentru toate repository-urile și adaugă teste unitare.
+- Extragerea configurației DB într-un fișier `application.properties` sau în variabile de mediu.
 
-Dacă vrei, pot: 1) genera fișierul ERD vizual (image) sau 2) aplica validarea `email` + excepție, sau 3) schimba `System.out.println` cu `Logger` — spune ce preferi.
+Dacă vrei, pot genera un script SQL de migrare care adaugă FK-urile recomandate și pot crea un fișier ERD PNG/SVG exportat din mermaid.
 
+---
+
+Dacă dorești, fac eu commit cu acest README actualizat; spune mesajul de commit dorit.
 
 
