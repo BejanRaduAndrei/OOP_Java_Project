@@ -1,6 +1,7 @@
 package com.proiect;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -31,8 +32,78 @@ public class Main extends Application {
     }
 
     public static void main(String[] args) {
-        // Metoda launch va apela automat metoda start() de mai sus
+        initializeDatabase();
+
+        Thread terminalThread = new Thread(() -> new TerminalMenu().start(), "terminal-menu-thread");
+        terminalThread.setDaemon(true);
+        terminalThread.start();
+
         launch(args);
+    }
+
+    private static void initializeDatabase() {
+        createPgAdminTables();
+        seedDemoData();
+        printPgAdminTables();
+    }
+
+    private static void seedDemoData() {
+        insertIfTableEmpty(
+            "clienti",
+            "SELECT COUNT(*) FROM clienti",
+            "INSERT INTO clienti (cnp, nume, email, telefon) VALUES (?, ?, ?, ?)",
+            new Object[][] {
+                {"1960524123456", "Popescu Andrei", "andrei.popescu@example.com", "0712345678"},
+                {"1970815123457", "Ionescu Maria", "maria.ionescu@example.com", "0723456789"}
+            }
+        );
+
+        insertIfTableEmpty(
+            "masini",
+            "SELECT COUNT(*) FROM masini",
+            "INSERT INTO masini (make, model, year, daily_rate, available) VALUES (?, ?, ?, ?, ?)",
+            new Object[][] {
+                {"Dacia", "Duster", 2021, 220.0, true},
+                {"Volkswagen", "Golf", 2020, 180.0, true}
+            }
+        );
+    }
+
+    private static void insertIfTableEmpty(String tableName, String countSql, String insertSql, Object[][] values) {
+        Connection connection = Database.connect();
+        if (connection == null) {
+            System.out.println("Nu exista conexiune la PostgreSQL pentru popularea tabelului " + tableName + ".");
+            return;
+        }
+
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(countSql)) {
+
+            if (!resultSet.next() || resultSet.getInt(1) > 0) {
+                return;
+            }
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(insertSql)) {
+                for (Object[] row : values) {
+                    for (int i = 0; i < row.length; i++) {
+                        preparedStatement.setObject(i + 1, row[i]);
+                    }
+                    preparedStatement.executeUpdate();
+                }
+            }
+
+            System.out.println("Date demo inserate in tabelul " + tableName + ".");
+        } catch (SQLException exception) {
+            System.out.println("Eroare la inserarea datelor in tabelul " + tableName + ": " + exception.getMessage());
+        } finally {
+            try {
+                if (connection != null && !connection.isClosed()) {
+                    connection.close();
+                }
+            } catch (SQLException exception) {
+                System.out.println("Eroare la inchiderea conexiunii: " + exception.getMessage());
+            }
+        }
     }
 
     private static void createPgAdminTables() {

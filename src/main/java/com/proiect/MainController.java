@@ -1,5 +1,7 @@
 package com.proiect;
 
+import java.util.List;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -41,7 +43,44 @@ public class MainController {
         clientListView.setItems(clients);
         vehicleListView.setItems(vehicles);
 
-        listaProduse.addAll("Sistem pornit...", "Conexiune DB OK.");
+        refreshDataFromDatabase();
+    }
+
+    @FXML
+    private void handleRefresh() {
+        refreshDataFromDatabase();
+    }
+
+    private void refreshDataFromDatabase() {
+        listaProduse.clear();
+        clients.clear();
+        vehicles.clear();
+        clientService.getAllClients().clear();
+        vehicleService.getAllVehicles().clear();
+
+        listaProduse.addAll("Sistem pornit...", "Se reincarca datele din baza de date...");
+
+        try {
+            List<Client> persistedClients = clientRepo.readAll();
+            for (Client c : persistedClients) {
+                clientService.addClient(c);
+                clients.add(c.getName() + " (" + c.getCnp() + ")");
+            }
+        } catch (Exception e) {
+            System.out.println("Eroare la încărcarea clienților: " + e.getMessage());
+        }
+
+        try {
+            List<Car> persistedCars = carRepo.readAll();
+            for (Car car : persistedCars) {
+                vehicleService.addVehicle(car);
+                vehicles.add(car.getMake() + " " + car.getModel() + " (" + car.getYear() + ")");
+            }
+        } catch (Exception e) {
+            System.out.println("Eroare la încărcarea vehiculelor: " + e.getMessage());
+        }
+
+        listaProduse.add("Datele au fost actualizate.");
     }
 
     @FXML

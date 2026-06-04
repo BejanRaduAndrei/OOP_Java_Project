@@ -221,7 +221,49 @@ public class DataSavingService {
         }
 
         @Override
-        public List<Car> readAll() { return new ArrayList<>(); }
+        public List<Car> readAll() {
+            List<Car> lista = new ArrayList<>();
+            // Try common table names used in the project: 'vehicule' (used by this service) or 'masini' (created in Main)
+            String[] possibleQueries = {
+                "SELECT * FROM vehicule WHERE tip_vehicul = 'CAR'",
+                "SELECT * FROM masini"
+            };
+
+            for (String sql : possibleQueries) {
+                try (Connection conn = Database.connect();
+                     Statement stmt = conn.createStatement();
+                     ResultSet rs = stmt.executeQuery(sql)) {
+
+                    while (rs.next()) {
+                        String marca;
+                        try { marca = rs.getString("marca"); } catch (SQLException ex) { marca = rs.getString("make"); }
+                        String model = rs.getString("model");
+
+                        int year;
+                        try { year = rs.getInt("an_fabricatie"); } catch (SQLException ex) { year = rs.getInt("year"); }
+
+                        double rate;
+                        try { rate = rs.getDouble("tarif_zilnic"); } catch (SQLException ex) { rate = rs.getDouble("daily_rate"); }
+
+                        boolean available = true;
+                        try { available = rs.getBoolean("disponibil"); } catch (SQLException ex) {
+                            try { available = rs.getBoolean("available"); } catch (SQLException ex2) { available = true; }
+                        }
+
+                        // Provide sensible defaults for fields not stored in the simple tables
+                        Car car = new Car(marca, model, year, rate, available, 1400, "NEINREGISTRATA", "benzina", 0);
+                        lista.add(car);
+                    }
+
+                    // If we found rows for this query, return them (don't try other queries)
+                    if (!lista.isEmpty()) return lista;
+                } catch (SQLException e) {
+                    // table/column might not exist for this query — try next one
+                }
+            }
+
+            return lista;
+        }
         @Override
         public void update(Car car) {}
         @Override
